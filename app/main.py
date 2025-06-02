@@ -1,8 +1,9 @@
+import uuid
+from typing import List, Optional
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from typing import List, Optional
-import uuid
 
 app = FastAPI(
     title="Workshop API",

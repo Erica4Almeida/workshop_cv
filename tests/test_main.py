@@ -16,9 +16,9 @@ def clear_db():
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
-    assert "message" in response.json()
-    assert "Welcome" in response.json()["message"]
-
+    assert "text/html" in response.headers["content-type"]
+    assert "<html" in response.text
+    assert "View API Documentation" in response.text
 
 def test_get_items_empty():
     response = client.get("/items")

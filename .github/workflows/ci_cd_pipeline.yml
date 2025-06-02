@@ -20,18 +20,39 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Instalar Python 3.11
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: Cache do Poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
       - name: Instalar Poetry
         run: pip install poetry
+
+      - name: Configurar Poetry
+        run: poetry config virtualenvs.create false
 
       - name: Instalar dependências com Poetry
         run: poetry install --no-interaction --no-root
 
       - name: Executar testes com cobertura
         run: poetry run pytest --cov=app --cov-report=xml --junitxml=test-results.xml
+
+      - name: Upload dos resultados de teste
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results.xml
+            coverage.xml
+          retention-days: 30
 
   linting-job:
     name: Linting
@@ -42,12 +63,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Instalar Python 3.11
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: Cache do Poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
       - name: Instalar Poetry
         run: pip install poetry
+
+      - name: Configurar Poetry
+        run: poetry config virtualenvs.create false
 
       - name: Instalar dependências com Poetry
         run: poetry install --no-interaction --no-root
@@ -84,10 +116,12 @@ jobs:
         run: docker save my-app:latest -o app.tar
 
       - name: Upload da imagem Docker
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-image
           path: app.tar
+          retention-days: 1
+          compression-level: 6
 
   run-built-image:
     name: Rodar Imagem Docker Localmente
@@ -96,7 +130,7 @@ jobs:
 
     steps:
       - name: Baixar imagem Docker do artefato
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: app-image
 
@@ -106,3 +140,19 @@ jobs:
       - name: Executar container da aplicação
         run: |
           docker run -d -p 8080:8000 --name my-running-app my-app:latest
+
+      - name: Verificar se container está rodando
+        run: |
+          sleep 10
+          docker ps
+          curl -f http://localhost:8080/health || echo "Health check failed"
+
+      - name: Mostrar logs do container
+        if: always()
+        run: docker logs my-running-app
+
+      - name: Parar e remover container
+        if: always()
+        run: |
+          docker stop my-running-app || true
+          docker rm my-running-app || true

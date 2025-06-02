@@ -84,7 +84,7 @@ jobs:
         run: docker save my-app:latest -o app.tar
 
       - name: Upload da imagem Docker
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: app-image
           path: app.tar
@@ -96,7 +96,7 @@ jobs:
 
     steps:
       - name: Baixar imagem Docker do artefato
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v2
         with:
           name: app-image
 

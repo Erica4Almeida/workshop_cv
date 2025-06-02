@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional
 import uuid
@@ -68,5 +67,17 @@ async def get_item(item_id: str):
 @app.on_event("startup")
 async def startup_event():
     # Add some initial items
-    db.append({"id": str(uuid.uuid4()), "name": "Item 1", "description": "This is the first item"})
-    db.append({"id": str(uuid.uuid4()), "name": "Item 2", "description": "This is the second item"}) 
+    db.append(
+        {
+            "id": str(uuid.uuid4()),
+            "name": "Item 1",
+            "description": "This is the first item",
+        }
+    )
+    db.append(
+        {
+            "id": str(uuid.uuid4()),
+            "name": "Item 2",
+            "description": "This is the second item",
+        }
+    )
